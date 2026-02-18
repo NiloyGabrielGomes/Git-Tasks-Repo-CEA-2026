@@ -15,11 +15,18 @@
 ## Changes
 - 
 - 
-- [ ] Documentation updated/added
-- [ ] No breaking changes
 
-## Related Issues
-<!-- Link issues: Fixes #n-->
+## How to Test (if applicable)
+1. 
+2. 
+3. 
+
+## Checklist
+- [ ] My code follows the project style guidelines
+- [ ] Code passes linting and type checks
+- [ ] All tests pass
+- [ ] I have added tests for my changes (if applicable)
+- [ ] I have updated documentation (if applicable)
+
 ## Screenshots (if applicable)
-
 <!-- Add screenshots for UI changes -->

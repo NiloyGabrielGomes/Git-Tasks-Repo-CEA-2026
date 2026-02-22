@@ -19,3 +19,4 @@
 - Messed up squashing with GUI and sqashed the wrong commit to the and wrong message, used reflog to go back
 - Ran into a merge conflict when rebasing branch 2 with branch 1
 - I squashed the commits in branch 1 first and then tried to rebase branch 2 but it shows that the branch 1 commits are still in branch 2 and is creating a conflict.
+- Trying to find a solution to this but so far nothing.

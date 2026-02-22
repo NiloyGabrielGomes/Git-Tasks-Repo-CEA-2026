@@ -20,3 +20,5 @@
 - Ran into a merge conflict when rebasing branch 2 with branch 1
 - I squashed the commits in branch 1 first and then tried to rebase branch 2 but it shows that the branch 1 commits are still in branch 2 and is creating a conflict.
 - Trying to find a solution to this but so far nothing.
+- Manually changed heads to resolve conflicts; might have to do the same with branch 3
+- Realized I messed up the commit messages during squashing now have to edit those commits and rebase again

@@ -206,3 +206,54 @@ class CalculatorApp(tk.Tk):
             self.lbl_result.config(text=str(-val), fg=TEXT_MAIN)
         except ValueError:
             pass
+
+ # ── Operation handlers ────────────────────────────────────────────────────
+
+    # Maps operator symbol → function(a, b)
+    _DUAL = {
+        "+": add, "-": subtract, "*": multiply, "/": divide,
+        "**": power, "%": modulo, "//": floor_divide,
+        "pct": percentage, "round": round_to,
+    }
+
+    def _op(self, symbol):
+        """Store first operand + operator, wait for second."""
+        val = self._current_value()
+        if val is None:
+            return
+        self._a          = val
+        self._pending_op = symbol
+        self._expr       = f"{val} {symbol}"
+        self.lbl_expr.config(text=self._expr)
+        self._just_result = True   # next digit press clears display
+
+    def _evaluate(self):
+        if self._pending_op is None:
+            return
+        b   = self._current_value()
+        a   = self._a
+        op  = self._pending_op
+        fn  = self._DUAL.get(op)
+        if fn is None or a is None or b is None:
+            return
+        expr   = f"{a} {op} {b}"
+        result = fn(a, b)
+        self._expr        = expr
+        self._pending_op  = None
+        self._just_result = True
+        self._set_display(result, expr + " =")
+
+    def _single_eval(self, fn):
+        """Immediately apply a single-argument function to the displayed value."""
+        val = self._current_value()
+        if val is None:
+            return
+        result = fn(val)
+        expr   = f"f({val})"
+        self._just_result = True
+        self._set_display(result, expr + " =")
+
+
+if __name__ == "__main__":
+    app = CalculatorApp()
+    app.mainloop()

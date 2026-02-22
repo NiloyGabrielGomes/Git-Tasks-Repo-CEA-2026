@@ -27,3 +27,6 @@
 - Just realized I don't know how to differentiate between Task 1 and 2 in the given google sheet as the link to the PRs won't show the changes in rebasing.
 - Created a separate branch to push the reflog details onto an md file and create PR for the changes made in task 2
 - Gave up on resolving 13 conflicts manually and generated a python script to that automatically, was faster.
+- Just realized I did not properly gave commit message each time this file was updated
+- Only commit message was `Updated stream of consciousness`. This was done until the last commit.
+- Now properly creating commit messages to reflect what the actual changes were in this file.

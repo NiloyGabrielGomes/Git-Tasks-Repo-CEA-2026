@@ -22,3 +22,7 @@
 - Trying to find a solution to this but so far nothing.
 - Manually changed heads to resolve conflicts; might have to do the same with branch 3
 - Realized I messed up the commit messages during squashing now have to edit those commits and rebase again
+- Forgot to rebase branch 3 with branch 2 before squashing the commits of branch 2
+- Now have to resolve 13 conflicts of branch 3 rebase manually
+- Just realized I don't know how to differentiate between Task 1 and 2 in the given google sheet as the link to the PRs won't show the changes in rebasing.
+- 

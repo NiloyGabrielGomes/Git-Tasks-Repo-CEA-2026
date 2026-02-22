@@ -38,6 +38,25 @@ def floor_divide(a, b):
         return "Error: Cannot divide by zero"
     return a // b
 
+# --- Logarithms ---
+
+def log10(a):
+    if a <= 0:
+        return "Error: Logarithm undefined for non-positive numbers"
+    return math.log10(a)
+
+def natural_log(a):
+    if a <= 0:
+        return "Error: Logarithm undefined for non-positive numbers"
+    return math.log(a)
+
+# --- Factorial ---
+
+def factorial(a):
+    if not float(a).is_integer() or a < 0:
+        return "Error: Factorial requires a non-negative integer"
+    return math.factorial(int(a))
+
 def calculator():
     print("=== Simple Calculator ===")
     print("Operations: + - * /")

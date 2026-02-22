@@ -57,6 +57,30 @@ def factorial(a):
         return "Error: Factorial requires a non-negative integer"
     return math.factorial(int(a))
 
+# --- Trigonometry (input in degrees) ---
+
+def sine(a):
+    return math.sin(math.radians(a))
+
+def cosine(a):
+    return math.cos(math.radians(a))
+
+def tangent(a):
+    if math.cos(math.radians(a)) == 0:
+        return "Error: Tangent undefined at this angle"
+    return math.tan(math.radians(a))
+
+# --- Percentage & Rounding ---
+
+def percentage(a, b):
+    """Calculate a% of b"""
+    return (a / 100) * b
+
+def round_to(a, decimals):
+    """Round a to n decimal places"""
+    return round(a, int(decimals))
+
+
 def calculator():
     print("=== Simple Calculator ===")
     print("Operations: + - * /")

@@ -125,3 +125,84 @@ class CalculatorApp(tk.Tk):
                     cb  = lambda s=sym: self._op(s)
                     bg  = BTN_OP
                 btn(basic, label, cb, bg, row=r+1, column=c)
+
+        # ── Advanced panel (right side) ────────────────────────────────────
+        adv = tk.Frame(self, bg=BG)
+        adv.grid(row=1, column=4, columnspan=2, padx=6, sticky="n")
+
+        for c in range(2):
+            adv.columnconfigure(c, weight=1, minsize=72)
+
+        adv_buttons = [
+            ("x²",    lambda: self._single_eval(lambda a: power(a, 2))),
+            ("√",     lambda: self._single_eval(square_root)),
+            ("xʸ",    lambda: self._op("**")),
+            ("//",    lambda: self._op("//")),
+            ("log",   lambda: self._single_eval(log10)),
+            ("ln",    lambda: self._single_eval(natural_log)),
+            ("n!",    lambda: self._single_eval(factorial)),
+            ("pct",   lambda: self._op("pct")),
+            ("sin",   lambda: self._single_eval(sine)),
+            ("cos",   lambda: self._single_eval(cosine)),
+            ("tan",   lambda: self._single_eval(tangent)),
+            ("round", lambda: self._op("round")),
+        ]
+
+        for i, (label, cmd) in enumerate(adv_buttons):
+            btn(adv, label, cmd, BTN_ADV, TEXT_MAIN, self.font_adv,
+                row=i // 2, column=i % 2)
+
+    # ── State helpers ─────────────────────────────────────────────────────────
+
+    def _set_display(self, value, expr=""):
+        text = str(value)
+        color = TEXT_ERROR if str(value).startswith("Error") else TEXT_RESULT
+        self.lbl_result.config(text=text, fg=color)
+        self.lbl_expr.config(text=expr)
+
+    def _current_value(self):
+        """Return the float currently shown on the display."""
+        try:
+            return float(self.lbl_result.cget("text"))
+        except ValueError:
+            return None
+
+    # ── Input handlers ────────────────────────────────────────────────────────
+
+    def _digit(self, d):
+        if self._just_result:
+            self._expr = ""
+            self._just_result = False
+            self.lbl_result.config(text="0", fg=TEXT_MAIN)
+
+        current = self.lbl_result.cget("text")
+        if current in ("0", "Error") or current.startswith("Error"):
+            current = ""
+        if d == "." and "." in current:
+            return
+        new = current + d
+        self.lbl_result.config(text=new, fg=TEXT_MAIN)
+
+    def _backspace(self):
+        current = self.lbl_result.cget("text")
+        if current.startswith("Error"):
+            self._clear()
+            return
+        new = current[:-1] or "0"
+        self.lbl_result.config(text=new, fg=TEXT_MAIN)
+
+    def _clear(self):
+        self._expr        = ""
+        self._pending_op  = None
+        self._just_result = False
+        self._a           = None
+        self.lbl_result.config(text="0", fg=TEXT_MAIN)
+        self.lbl_expr.config(text="")
+
+    def _negate(self):
+        current = self.lbl_result.cget("text")
+        try:
+            val = float(current)
+            self.lbl_result.config(text=str(-val), fg=TEXT_MAIN)
+        except ValueError:
+            pass

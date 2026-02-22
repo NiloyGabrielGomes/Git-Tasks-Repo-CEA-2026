@@ -25,4 +25,5 @@
 - Forgot to rebase branch 3 with branch 2 before squashing the commits of branch 2
 - Now have to resolve 13 conflicts of branch 3 rebase manually
 - Just realized I don't know how to differentiate between Task 1 and 2 in the given google sheet as the link to the PRs won't show the changes in rebasing.
-- 
+- Created a separate branch to push the reflog details onto an md file and create PR for the changes made in task 2
+- Gave up on resolving 13 conflicts manually and generated a python script to that automatically, was faster.

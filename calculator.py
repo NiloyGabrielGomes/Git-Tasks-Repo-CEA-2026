@@ -81,40 +81,71 @@ def round_to(a, decimals):
     return round(a, int(decimals))
 
 
+# --- Menu & Calculator Loop ---
+
+SINGLE_ARG_OPS = {
+    "sqrt": square_root,
+    "log10": log10,
+    "ln": natural_log,
+    "fact": factorial,
+    "sin": sine,
+    "cos": cosine,
+    "tan": tangent,
+}
+
+DUAL_ARG_OPS = {
+    "+": add,
+    "-": subtract,
+    "*": multiply,
+    "/": divide,
+    "**": power,
+    "%": modulo,
+    "//": floor_divide,
+    "pct": percentage,
+    "round": round_to,
+}
+
+def print_menu():
+    print("=== Advanced Calculator ===")
+    print("\n  Basic:        +   -   *   /")
+    print("  Power/Root:   **  sqrt")
+    print("  Division:     %   //")
+    print("  Logarithms:   log10  ln")
+    print("  Factorial:    fact")
+    print("  Trig (deg):   sin  cos  tan")
+    print("  Other:        pct  round")
+    print("\nType 'quit' to exit\n")
+
 def calculator():
-    print("=== Simple Calculator ===")
-    print("Operations: + - * /")
-    print("Type 'quit' to exit\n")
+    print_menu()
 
     while True:
         try:
-            a = input("Enter first number: ")
-            if a.lower() == "quit":
+            op = input("Enter operator: ").strip().lower()
+            if op == "quit":
                 break
 
-            op = input("Enter operator (+, -, *, /): ")
-            if op.lower() == "quit":
-                break
+            if op in SINGLE_ARG_OPS:
+                a = input("Enter number: ")
+                if a.lower() == "quit":
+                    break
+                a = float(a)
+                result = SINGLE_ARG_OPS[op](a)
+                print(f"Result: {op}({a}) = {result}\n")
 
-            b = input("Enter second number: ")
-            if b.lower() == "quit":
-                break
+            elif op in DUAL_ARG_OPS:
+                a = input("Enter first number: ")
+                if a.lower() == "quit":
+                    break
+                b = input("Enter second number: ")
+                if b.lower() == "quit":
+                    break
+                a, b = float(a), float(b)
+                result = DUAL_ARG_OPS[op](a, b)
+                print(f"Result: {a} {op} {b} = {result}\n")
 
-            a, b = float(a), float(b)
-
-            if op == "+":
-                result = add(a, b)
-            elif op == "-":
-                result = subtract(a, b)
-            elif op == "*":
-                result = multiply(a, b)
-            elif op == "/":
-                result = divide(a, b)
             else:
-                print("Invalid operator. Please use +, -, *, /\n")
-                continue
-
-            print(f"Result: {a} {op} {b} = {result}\n")
+                print("Invalid operator. Type the operator shown in the menu.\n")
 
         except ValueError:
             print("Invalid input. Please enter numeric values.\n")

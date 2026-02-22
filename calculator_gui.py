@@ -46,3 +46,82 @@ class CalculatorApp(tk.Tk):
         self.font_btn     = font.Font(family="Segoe UI",  size=12, weight="bold")
         self.font_adv     = font.Font(family="Segoe UI",  size=10)
 
+    # ── Display ───────────────────────────────────────────────────────────────
+
+    def _build_display(self):
+        frame = tk.Frame(self, bg=DISPLAY_BG, padx=12, pady=10)
+        frame.grid(row=0, column=0, columnspan=6, sticky="ew", padx=10, pady=(10, 4))
+
+        # expression / history line
+        self.lbl_expr = tk.Label(
+            frame, text="", anchor="e",
+            bg=DISPLAY_BG, fg="#6c7086",
+            font=self.font_expr, width=28
+        )
+        self.lbl_expr.pack(fill="x")
+
+        # main result line
+        self.lbl_result = tk.Label(
+            frame, text="0", anchor="e",
+            bg=DISPLAY_BG, fg=TEXT_MAIN,
+            font=self.font_display, width=28
+        )
+        self.lbl_result.pack(fill="x")
+
+    # ── Button grid ───────────────────────────────────────────────────────────
+
+    def _build_buttons(self):
+        pad = {"padx": 4, "pady": 4}
+
+        def btn(parent, text, cmd, bg=BTN_NUM, fg=TEXT_MAIN, fnt=None, **grid_kw):
+            f = fnt or self.font_btn
+            b = tk.Button(
+                parent, text=text, command=cmd,
+                bg=bg, fg=fg, activebackground=HOVER_LIGHT,
+                activeforeground=TEXT_MAIN, relief="flat",
+                font=f, cursor="hand2", bd=0,
+                padx=6, pady=10
+            )
+            b.grid(**grid_kw, **pad, sticky="nsew")
+            return b
+
+        # ── Row 0: basic + clear ───────────────────────────────────────────
+        basic = tk.Frame(self, bg=BG)
+        basic.grid(row=1, column=0, columnspan=4, padx=6)
+
+        for c in range(4):
+            basic.columnconfigure(c, weight=1, minsize=70)
+
+        btn(basic, "C",   self._clear,         BTN_SPECIAL, "#1e1e2e", row=0, column=0)
+        btn(basic, "⌫",   self._backspace,      BTN_SPECIAL, "#1e1e2e", row=0, column=1)
+        btn(basic, "%",   lambda: self._op("%"),  BTN_OP,     row=0, column=2)
+        btn(basic, "/",   lambda: self._op("/"),  BTN_OP,     row=0, column=3)
+
+        # rows 1-3: digits + basic ops
+        digits_ops = [
+            ("7", "8", "9", "×"),
+            ("4", "5", "6", "−"),
+            ("1", "2", "3", "+"),
+            ("±", "0", ".", "="),
+        ]
+        op_map = {"×": "*", "−": "-"}
+
+        for r, row_items in enumerate(digits_ops):
+            for c, label in enumerate(row_items):
+                if label.lstrip("-").replace(".", "").isdigit() or label == ".":
+                    cb = lambda l=label: self._digit(l)
+                    bg = BTN_NUM
+                elif label == "=":
+                    cb = self._evaluate
+                    bg = BTN_EQUAL
+                    fg = "#1e1e2e"
+                    btn(basic, label, cb, bg, fg, row=r+1, column=c)
+                    continue
+                elif label == "±":
+                    cb = self._negate
+                    bg = BTN_OP
+                else:
+                    sym = op_map.get(label, label)
+                    cb  = lambda s=sym: self._op(s)
+                    bg  = BTN_OP
+                btn(basic, label, cb, bg, row=r+1, column=c)

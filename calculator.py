@@ -1,3 +1,7 @@
+import math
+
+# --- Basic Operations ---
+
 def add(a, b):
     return a + b
 
@@ -11,6 +15,28 @@ def divide(a, b):
     if b == 0:
         return "Error: Cannot divide by zero"
     return a / b
+
+# --- Power & Roots ---
+
+def power(a, b):
+    return a ** b
+
+def square_root(a):
+    if a < 0:
+        return "Error: Cannot take square root of a negative number"
+    return math.sqrt(a)
+
+# --- Modulo & Floor Division ---
+
+def modulo(a, b):
+    if b == 0:
+        return "Error: Cannot modulo by zero"
+    return a % b
+
+def floor_divide(a, b):
+    if b == 0:
+        return "Error: Cannot divide by zero"
+    return a // b
 
 def calculator():
     print("=== Simple Calculator ===")

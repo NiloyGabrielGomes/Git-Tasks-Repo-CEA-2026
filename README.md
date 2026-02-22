@@ -17,4 +17,5 @@
 - Exploring git kraken as GUI for rebasing
 - Found GitLens to be a simplier approach, eventhough isnt as detailed as kraken
 - Messed up squashing with GUI and sqashed the wrong commit to the and wrong message, used reflog to go back
-- 
+- Ran into a merge conflict when rebasing branch 2 with branch 1
+- I squashed the commits in branch 1 first and then tried to rebase branch 2 but it shows that the branch 1 commits are still in branch 2 and is creating a conflict.

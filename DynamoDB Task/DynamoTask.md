@@ -187,4 +187,37 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 
 #### DB Schema
 
-`PK = ANNOUNCEMENTS` / `SK = <id>` — All announcements in one partition (low volume). Stores title, body, audience (`all` or `team_leads`), status (`DRAFT` / `SCHEDULED` / `SENT`), scheduled_at, published_at, created_by, created_at. Filter by status or audience in app — no GSI needed.
+`PK = ANNOUNCEMENTS` / `SK = <id>` — All announcements in one partition (low volume). Stores title, body, audience (`all` or `team_leads`), status (`DRAFT` / `SCHEDULED` / `SENT`), scheduled_at, published_at, created_by, created_at. Filter by status or audience in app; no GSI needed.
+
+---
+
+### Audit Log
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 28 | Create audit entry | T1 | `PUT PK = AUDIT#<date>` + `SK = <timestamp>#<uuid>` |
+| 29 | Query logs by date | T1 | `PK = AUDIT#<date>` + `SK` range |
+| 30 | Filter by actor / entity / action | T1 | Query #29 → `FilterExpression` on `actor_id`, `entity_type`, `action` |
+
+#### DB Schema
+
+`PK = AUDIT#<date>` / `SK = <timestamp>#<uuid>` — Date-centric partition for efficient range queries. Each item stores actor_id, action (`create` / `update` / `delete`), entity_type, entity_id, target_user_id, field_changed, old_value, new_value, timestamp. Immutable — no updates or deletes. The `#<uuid>` suffix in SK guarantees uniqueness within the same timestamp.
+
+---
+
+### Policy / Config
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 31 | Get a config value | T1 + T2 | `PK = CONFIG` + `SK = <name>` |
+| 32 | Update a config value | T1 + T2 | `PUT PK = CONFIG` + `SK = <name>` |
+
+#### DB Schema
+
+`PK = CONFIG` / `SK = <name>` — One item per setting. Stores value (JSON or plain string), updated_by, updated_at.
+
+Known keys: `cutoff_time` (meal update cutoff), `forward_planning_days`, `wfh_monthly_allowance`, `team_role_map` (Discord role → team mapping), `enabled_meals` (global meal toggles).

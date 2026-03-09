@@ -78,38 +78,10 @@
 PK:  USER#<id>
 SK:  PROFILE
 ```
+`PK = USER#<id>` / `SK = PROFILE` — Stores the full user profile: name, email, password_hash (Task 1 web auth), role (`EMPLOYEE` / `TEAM_LEAD` / `ADMIN`), team, discord_id, is_active, created_at.
 
-| Attribute | Type | Notes |
-| --- | --- | --- |
-| `name` | S | Display name |
-| `email` | S | Unique email |
-| `password_hash` | S | Task 1 only (web auth) |
-| `role` | S | `EMPLOYEE` / `TEAM_LEAD` / `ADMIN` |
-| `team` | S | Team name (nullable) |
-| `discord_id` | S | Task 2 — Discord snowflake ID |
-| `is_active` | BOOL | Default `true` |
-| `created_at` | S | ISO-8601 timestamp |
+`PK = EMAIL#<email>` / `SK = LOOKUP` — Thin pointer containing only `user_id`. Used for email-based login: read this item first, then `GetItem` on `USER#<user_id>`.
 
-**Email Lookup Item**
+`PK = DISCORD#<discordId>` / `SK = LOOKUP` — Same pattern as email lookup but keyed on Discord snowflake ID. Used by the bot for authentication.
 
-```
-PK:  EMAIL#<email>
-SK:  LOOKUP
-```
-
-| Attribute | Type | Notes |
-| --- | --- | --- |
-| `user_id` | S | Points to the `<id>` in `USER#<id>` |
-
-**Discord Lookup Item** 
-
-```
-PK:  DISCORD#<discordId>
-SK:  LOOKUP
-```
-
-| Attribute | Type | Notes |
-| --- | --- | --- |
-| `user_id` | S | Points to the `<id>` in `USER#<id>` |
-
----
+> Both lookup items are maintained transactionally whenever email or discord_id changes on a user profile.

@@ -53,3 +53,63 @@
 | Audit Log Entry | `AUDIT#<date>` | `<timestamp>#<uuid>` | `ACTOR#<actorId>` | `<timestamp>` |
 | Policy / Config | `CONFIG` | `<name>` | — | — |
 | Sched. Meal Pref | `USER#<id>` | `SCHEDPREF#<date>#<mealType>` | — | — |
+
+---
+
+## Entity Details
+
+### Users
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 1 | Get user profile | T1 + T2 | `PK = USER#<id>` + `SK = PROFILE` |
+| 2 | Login by email | T1 | `PK = EMAIL#<email>` + `SK = LOOKUP` → then fetch `USER#<id>` |
+| 3 | Bot auth by Discord ID | T2 | `PK = DISCORD#<discordId>` + `SK = LOOKUP` → then fetch `USER#<id>` |
+| 4 | Create / update user | T1 + T2 | `PUT PK = USER#<id>` + `SK = PROFILE` |
+| 5 | Get user's team | T2 | `PK = USER#<id>` + `SK = PROFILE` → read `team` attribute |
+
+#### DB Schema
+
+**User Profile Item**
+
+```
+PK:  USER#<id>
+SK:  PROFILE
+```
+
+| Attribute | Type | Notes |
+| --- | --- | --- |
+| `name` | S | Display name |
+| `email` | S | Unique email |
+| `password_hash` | S | Task 1 only (web auth) |
+| `role` | S | `EMPLOYEE` / `TEAM_LEAD` / `ADMIN` |
+| `team` | S | Team name (nullable) |
+| `discord_id` | S | Task 2 — Discord snowflake ID |
+| `is_active` | BOOL | Default `true` |
+| `created_at` | S | ISO-8601 timestamp |
+
+**Email Lookup Item**
+
+```
+PK:  EMAIL#<email>
+SK:  LOOKUP
+```
+
+| Attribute | Type | Notes |
+| --- | --- | --- |
+| `user_id` | S | Points to the `<id>` in `USER#<id>` |
+
+**Discord Lookup Item** 
+
+```
+PK:  DISCORD#<discordId>
+SK:  LOOKUP
+```
+
+| Attribute | Type | Notes |
+| --- | --- | --- |
+| `user_id` | S | Points to the `<id>` in `USER#<id>` |
+
+---

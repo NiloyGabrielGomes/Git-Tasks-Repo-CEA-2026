@@ -221,3 +221,31 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 `PK = CONFIG` / `SK = <name>` — One item per setting. Stores value (JSON or plain string), updated_by, updated_at.
 
 Known keys: `cutoff_time` (meal update cutoff), `forward_planning_days`, `wfh_monthly_allowance`, `team_role_map` (Discord role → team mapping), `enabled_meals` (global meal toggles).
+
+---
+
+## GSI1 Summary
+
+A single sparse GSI serves date-based cross-partition queries:
+
+| Use Case | GSI1PK | GSI1SK |
+| --- | --- | --- |
+| All meals for a date | `DATE#<date>` | `MEAL#<userId>#<mealType>` |
+| All locations for a date | `DATE#<date>` | `WORKLOC#<userId>` |
+
+> Only Meal Participation and Work Location items write GSI1 keys. Everything else is excluded from the index.
+
+---
+
+## Access Pattern → Source Mapping
+
+| Pattern # | Entity | Task 1 | Task 2 |
+| --- | --- | --- | --- |
+| 1–5 | User | ✓ | ✓ |
+| 6–10 | Meal Participation | ✓ | ✓ |
+| 11–14 | Work Location | ✓ | ✓ |
+| 15–20 | Day & Meals | ✓ | ✓ |
+| 21–24 | WFH Period | ✓ | — |
+| 25–27 | Announcement | ✓ | — |
+| 28–30 | Audit Log | ✓ | — |
+| 31–32 | Policy / Config | ✓ | ✓ |

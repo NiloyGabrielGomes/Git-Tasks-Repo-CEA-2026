@@ -131,3 +131,60 @@ SK:  PROFILE
 
 ---
 
+### Day & Meals
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 15 | Get full day context | T1 + T2 | `PK = DAY#<date>` (returns all items in partition) |
+| 16 | Get day type only | T1 + T2 | `PK = DAY#<date>` + `SK = METADATA` |
+| 17 | Get available meals | T1 + T2 | `PK = DAY#<date>` + `SK = MEALS` |
+| 18 | Set day type (special day) | T1 + T2 | `PUT PK = DAY#<date>` + `SK = METADATA` |
+| 19 | Set available meals | T1 | `PUT PK = DAY#<date>` + `SK = MEALS` |
+| 20 | Create / delete event meal | T1 | `PUT/DELETE PK = DAY#<date>` + `SK = EVENTMEAL#<mealType>` |
+
+#### DB Schema
+
+All day-level data shares the `DAY#<date>` partition — one query returns everything for that day:
+
+- **`SK = METADATA`** — Day type info: day_type (`NORMAL`, `OFFICE_CLOSED`, `GOVERNMENT_HOLIDAY`, `SPECIAL_EVENT`, `GLOBAL_WFH`), note, created_by, created_at.
+- **`SK = MEALS`** — Which meals are enabled: enabled_meals map (e.g. `{"lunch": true, "snacks": true, "iftar": false}`).
+- **`SK = EVENTMEAL#<mealType>`** — One item per event meal: note, created_by, created_at.
+
+> Special day types that block participation (`OFFICE_CLOSED`, `GOVERNMENT_HOLIDAY`, `GLOBAL_WFH`) are enforced in application logic (atlease is supposed to but have a lingering thought of not doing that and keep it as a soft constraint; for special cases).
+
+---
+
+### WFH Periods
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 21 | List all WFH periods | T1 | `PK = WFHPERIOD` (sorted by SK) |
+| 22 | Check overlap / date lookup | T1 | `PK = WFHPERIOD` + `SK begins_with <date_prefix>` → filter in app |
+| 23 | Create WFH period | T1 | `PUT PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
+| 24 | Delete WFH period | T1 | `DELETE PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
+
+#### DB Schema
+
+`PK = WFHPERIOD` / `SK = <startDate>#<userId>` — All periods in one partition, naturally sorted by start date. Stores employee_id, end_date, reason, created_by, created_at.
+
+> On create, the app also writes `WORKLOC#<date>` items (location = `WFH`) for every day in `[start_date, end_date]` under that user's partition.
+
+---
+
+### Announcements
+
+#### Access Patterns
+
+| # | Pattern | Source | Key Condition |
+| --- | --- | --- | --- |
+| 25 | Get announcement by ID | T1 | `PK = ANNOUNCEMENTS` + `SK = <id>` |
+| 26 | List all / filter by status | T1 | `PK = ANNOUNCEMENTS` → filter on `status` attribute |
+| 27 | Create / update / delete | T1 | `PUT/DELETE PK = ANNOUNCEMENTS` + `SK = <id>` |
+
+#### DB Schema
+
+`PK = ANNOUNCEMENTS` / `SK = <id>` — All announcements in one partition (low volume). Stores title, body, audience (`all` or `team_leads`), status (`DRAFT` / `SCHEDULED` / `SENT`), scheduled_at, published_at, created_by, created_at. Filter by status or audience in app — no GSI needed.

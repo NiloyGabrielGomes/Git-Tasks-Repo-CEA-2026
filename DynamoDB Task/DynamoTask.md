@@ -31,3 +31,25 @@
 | `PROFILE`, `METADATA`, `MEALS`, `LOOKUP` | Fixed sort key tokens |
 
 > **Dates** are always `YYYY-MM-DD`. **Timestamps** are ISO-8601 (`YYYY-MM-DDTHH:MM:SSZ`).
+
+---
+
+## Full Schema Overview
+
+| Entity | PK | SK | GSI1PK | GSI1SK |
+| --- | --- | --- | --- | --- |
+| User Profile | `USER#<id>` | `PROFILE` | — | — |
+| Email Lookup | `EMAIL#<email>` | `LOOKUP` | — | — |
+| Discord Lookup | `DISCORD#<discordId>` | `LOOKUP` | — | — |
+| Team Metadata | `TEAM#<name>` | `METADATA` | — | — |
+| Team Member | `TEAM#<name>` | `MEMBER#<userId>` | — | — |
+| Meal Participation | `USER#<id>` | `MEAL#<date>#<mealType>` | `DATE#<date>` | `MEAL#<id>#<mealType>` |
+| Work Location | `USER#<id>` | `WORKLOC#<date>` | `DATE#<date>` | `WORKLOC#<id>` |
+| Day Metadata | `DAY#<date>` | `METADATA` | — | — |
+| Day Available Meals | `DAY#<date>` | `MEALS` | — | — |
+| Event Meal | `DAY#<date>` | `EVENTMEAL#<mealType>` | — | — |
+| WFH Period | `WFHPERIOD` | `<startDate>#<userId>` | — | — |
+| Announcement | `ANNOUNCEMENT#<id>` | `METADATA` | `ANNC#<status>` | `<publishedAt>` |
+| Audit Log Entry | `AUDIT#<date>` | `<timestamp>#<uuid>` | `ACTOR#<actorId>` | `<timestamp>` |
+| Policy / Config | `CONFIG` | `<name>` | — | — |
+| Sched. Meal Pref | `USER#<id>` | `SCHEDPREF#<date>#<mealType>` | — | — |

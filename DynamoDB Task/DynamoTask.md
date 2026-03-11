@@ -119,7 +119,8 @@ SK:  PROFILE
 | 11 | Get user's location for a date | T1 + T2 | `PK = USER#<id>` + `SK = WORKLOC#<date>` |
 | 12 | Set user's location | T1 + T2 | `PUT PK = USER#<id>` + `SK = WORKLOC#<date>` |
 | 13 | All locations for a date | T1 + T2 | `GSI1PK = DATE#<date>` + `GSI1SK begins_with WORKLOC#` |
-| 14 | Monthly WFH count for a user | T1 + T2 | `PK = USER#<id>` + `SK begins_with WORKLOC#<YYYY-MM>` → filter `location = WFH` |
+| 14 | Team locations for a date | T1 + T2 | Query #13 → filter on `team` attribute |
+| 15 | Monthly WFH count for a user | T1 + T2 | `PK = USER#<id>` + `SK begins_with WORKLOC#<YYYY-MM>` → filter `location = WFH` |
 
 #### DB Schema
 
@@ -137,12 +138,12 @@ SK:  PROFILE
 
 | # | Pattern | Source | Key Condition |
 | --- | --- | --- | --- |
-| 15 | Get full day context | T1 + T2 | `PK = DAY#<date>` (returns all items in partition) |
-| 16 | Get day type only | T1 + T2 | `PK = DAY#<date>` + `SK = METADATA` |
-| 17 | Get available meals | T1 + T2 | `PK = DAY#<date>` + `SK = MEALS` |
-| 18 | Set day type (special day) | T1 + T2 | `PUT PK = DAY#<date>` + `SK = METADATA` |
-| 19 | Set available meals | T1 | `PUT PK = DAY#<date>` + `SK = MEALS` |
-| 20 | Create / delete event meal | T1 | `PUT/DELETE PK = DAY#<date>` + `SK = EVENTMEAL#<mealType>` |
+| 16 | Get full day context | T1 + T2 | `PK = DAY#<date>` (returns all items in partition) |
+| 17 | Get day type only | T1 + T2 | `PK = DAY#<date>` + `SK = METADATA` |
+| 18 | Get available meals | T1 + T2 | `PK = DAY#<date>` + `SK = MEALS` |
+| 19 | Set day type (special day) | T1 + T2 | `PUT PK = DAY#<date>` + `SK = METADATA` |
+| 20 | Set available meals | T1 | `PUT PK = DAY#<date>` + `SK = MEALS` |
+| 21 | Create / delete event meal | T1 | `PUT/DELETE PK = DAY#<date>` + `SK = EVENTMEAL#<mealType>` |
 
 #### DB Schema
 
@@ -162,10 +163,10 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 
 | # | Pattern | Source | Key Condition |
 | --- | --- | --- | --- |
-| 21 | List all WFH periods | T1 | `PK = WFHPERIOD` (sorted by SK) |
-| 22 | Check overlap / date lookup | T1 | `PK = WFHPERIOD` + `SK begins_with <date_prefix>` → filter in app |
-| 23 | Create WFH period | T1 | `PUT PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
-| 24 | Delete WFH period | T1 | `DELETE PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
+| 22 | List all WFH periods | T1 | `PK = WFHPERIOD` (sorted by SK) |
+| 23 | Check overlap / date lookup | T1 | `PK = WFHPERIOD` + `SK begins_with <date_prefix>` → filter in app |
+| 24 | Create WFH period | T1 | `PUT PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
+| 25 | Delete WFH period | T1 | `DELETE PK = WFHPERIOD` + `SK = <startDate>#<userId>` |
 
 #### DB Schema
 
@@ -181,9 +182,9 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 
 | # | Pattern | Source | Key Condition |
 | --- | --- | --- | --- |
-| 25 | Get announcement by ID | T1 | `PK = ANNOUNCEMENTS` + `SK = <id>` |
-| 26 | List all / filter by status | T1 | `PK = ANNOUNCEMENTS` → filter on `status` attribute |
-| 27 | Create / update / delete | T1 | `PUT/DELETE PK = ANNOUNCEMENTS` + `SK = <id>` |
+| 26 | Get announcement by ID | T1 | `PK = ANNOUNCEMENTS` + `SK = <id>` |
+| 27 | List all / filter by status | T1 | `PK = ANNOUNCEMENTS` → filter on `status` attribute |
+| 28 | Create / update / delete | T1 | `PUT/DELETE PK = ANNOUNCEMENTS` + `SK = <id>` |
 
 #### DB Schema
 
@@ -197,9 +198,9 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 
 | # | Pattern | Source | Key Condition |
 | --- | --- | --- | --- |
-| 28 | Create audit entry | T1 | `PUT PK = AUDIT#<date>` + `SK = <timestamp>#<uuid>` |
-| 29 | Query logs by date | T1 | `PK = AUDIT#<date>` + `SK` range |
-| 30 | Filter by actor / entity / action | T1 | Query #29 → `FilterExpression` on `actor_id`, `entity_type`, `action` |
+| 29 | Create audit entry | T1 | `PUT PK = AUDIT#<date>` + `SK = <timestamp>#<uuid>` |
+| 30 | Query logs by date | T1 | `PK = AUDIT#<date>` + `SK` range |
+| 31 | Filter by actor / entity / action | T1 | Query #30 → `FilterExpression` on `actor_id`, `entity_type`, `action` |
 
 #### DB Schema
 
@@ -213,8 +214,8 @@ All day-level data shares the `DAY#<date>` partition — one query returns every
 
 | # | Pattern | Source | Key Condition |
 | --- | --- | --- | --- |
-| 31 | Get a config value | T1 + T2 | `PK = CONFIG` + `SK = <name>` |
-| 32 | Update a config value | T1 + T2 | `PUT PK = CONFIG` + `SK = <name>` |
+| 32 | Get a config value | T1 + T2 | `PK = CONFIG` + `SK = <name>` |
+| 33 | Update a config value | T1 + T2 | `PUT PK = CONFIG` + `SK = <name>` |
 
 #### DB Schema
 
@@ -243,9 +244,9 @@ A single sparse GSI serves date-based cross-partition queries:
 | --- | --- | --- | --- |
 | 1–5 | User | ✓ | ✓ |
 | 6–10 | Meal Participation | ✓ | ✓ |
-| 11–14 | Work Location | ✓ | ✓ |
-| 15–20 | Day & Meals | ✓ | ✓ |
-| 21–24 | WFH Period | ✓ | — |
-| 25–27 | Announcement | ✓ | — |
-| 28–30 | Audit Log | ✓ | — |
-| 31–32 | Policy / Config | ✓ | ✓ |
+| 11–15 | Work Location | ✓ | ✓ |
+| 16–21 | Day & Meals | ✓ | ✓ |
+| 22–25 | WFH Period | ✓ | — |
+| 26–28 | Announcement | ✓ | — |
+| 29–31 | Audit Log | ✓ | — |
+| 32–33 | Policy / Config | ✓ | ✓ |

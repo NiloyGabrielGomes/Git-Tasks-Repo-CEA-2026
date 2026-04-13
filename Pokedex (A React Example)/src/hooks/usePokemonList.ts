@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Pokemon } from '../types/pokemon';
 import type { PokemonListResult } from './types';
 import { fetchPokemonList } from '../api/pokemonapi';
@@ -6,62 +6,53 @@ import { fetchPokemonList } from '../api/pokemonapi';
 type FetchState =
   | { status: 'loading' }
   | { status: 'success'; data: Pokemon[] }
-  | { status: 'error'; error: string }
-  | { status: 'empty' };
+  | { status: 'error'; error: string };
 
 export function usePokemonList(searchQuery: string): PokemonListResult {
-  const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
-  const [state, setState] = useState<FetchState>({ status: 'loading' });
+  const [fetchState, setFetchState] = useState<FetchState>({ status: 'loading' });
 
-  const loadPokemon = useCallback(() => {
-    const controller = new AbortController();
-
-    setState({ status: 'loading' });
-
-    fetchPokemonList(controller.signal)
+  const loadPokemon = useCallback((signal: AbortSignal) => {
+    fetchPokemonList(signal)
       .then(data => {
-        setAllPokemon(data);
+        setFetchState({ status: 'success', data });
       })
       .catch(err => {
         if (err.name === 'AbortError') return;
-        setState({ status: 'error', error: err.message });
+        setFetchState({ status: 'error', error: err.message });
       });
-
-    return controller;
   }, []);
 
   useEffect(() => {
-    const controller = loadPokemon();
-
-    return () => {
-      controller.abort();
-    };
-  }, [loadPokemon]);
-
-  useEffect(() => {
-    if (allPokemon.length === 0 && state.status === 'loading') return;
-
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = query
-      ? allPokemon.filter(p => p.name.toLowerCase().includes(query))
-      : allPokemon;
-
-    if (filtered.length === 0 && query) {
-      setState({ status: 'empty' });
-    } else if (filtered.length > 0) {
-      setState({ status: 'success', data: filtered });
-    }
-  }, [searchQuery, allPokemon]);
-
-  const refetch = useCallback(() => {
-    const controller = loadPokemon();
+    const controller = new AbortController();
+    loadPokemon(controller.signal);
     return () => controller.abort();
   }, [loadPokemon]);
 
+  const refetch = useCallback(() => {
+    setFetchState({ status: 'loading' });
+    const controller = new AbortController();
+    loadPokemon(controller.signal);
+    return () => controller.abort();
+  }, [loadPokemon]);
+
+  const filtered = useMemo(() => {
+    if (fetchState.status !== 'success') return [];
+    const query = searchQuery.toLowerCase().trim();
+    return query
+      ? fetchState.data.filter(p => p.name.toLowerCase().includes(query))
+      : fetchState.data;
+  }, [fetchState, searchQuery]);
+
+  const status: PokemonListResult['status'] =
+    fetchState.status === 'loading' ? 'loading'
+    : fetchState.status === 'error' ? 'error'
+    : filtered.length === 0 && searchQuery.trim() ? 'empty'
+    : 'success';
+
   return {
-    status: state.status,
-    data: state.status === 'success' ? state.data : [],
-    error: state.status === 'error' ? state.error : null,
+    status,
+    data: filtered,
+    error: fetchState.status === 'error' ? fetchState.error : null,
     refetch,
   };
 }

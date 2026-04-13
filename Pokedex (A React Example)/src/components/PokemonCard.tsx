@@ -1,14 +1,19 @@
 import React from "react";
 import { typeColors } from "../utils/typeColors";
 import type { Pokemon } from "../types/pokemon";
+import { useNavigate } from "react-router-dom";
 
 interface PokemonCardProps {
   pokemon: Pokemon;
 }
 
 export const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon }) => {
+    const navigate = useNavigate();
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 cursor-pointer hover:shadow-lg transition-shadow duration-300 flex flex-col items-center">
+    <div
+      onClick={() => navigate(`/item/${pokemon.id}`)}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 cursor-pointer hover:shadow-lg transition-shadow duration-300 flex flex-col items-center"
+    >
       <div className="w-40 h-40 mb-4 flex items-center justify-center">
         <img
           src={pokemon.imageUrl}

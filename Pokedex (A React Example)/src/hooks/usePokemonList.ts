@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Pokemon } from '../types/pokemon';
+import type { PokemonListResult } from './types';
 import { fetchPokemonList } from '../api/pokemonapi';
 
 type FetchState =
@@ -8,7 +9,7 @@ type FetchState =
   | { status: 'error'; error: string }
   | { status: 'empty' };
 
-export function usePokemonList(searchQuery: string) {
+export function usePokemonList(searchQuery: string): PokemonListResult {
   const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
   const [state, setState] = useState<FetchState>({ status: 'loading' });
 
@@ -57,5 +58,10 @@ export function usePokemonList(searchQuery: string) {
     return () => controller.abort();
   }, [loadPokemon]);
 
-  return { state, refetch };
+  return {
+    status: state.status,
+    data: state.status === 'success' ? state.data : [],
+    error: state.status === 'error' ? state.error : null,
+    refetch,
+  };
 }

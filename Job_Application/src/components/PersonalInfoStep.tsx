@@ -81,7 +81,7 @@ export default function PersonalInfoStep({ onNext }: PersonalInfoStepProps) {
           }
         />
         {isValidating && (
-          <p id="email-validating" className="text-xs text-muted mt-1">
+          <p id="email-validating" className="text-xs text-gray-500 mt-1">
             Checking email availability...
           </p>
         )}
@@ -95,7 +95,7 @@ export default function PersonalInfoStep({ onNext }: PersonalInfoStepProps) {
       <div className="flex justify-end pt-4">
         <button
           type="button"
-          className="btn-primary"
+          className="bg-indigo-600 text-white hover:bg-indigo-700"
           onClick={handleNext}
           disabled={isValidating}
           aria-busy={isValidating}

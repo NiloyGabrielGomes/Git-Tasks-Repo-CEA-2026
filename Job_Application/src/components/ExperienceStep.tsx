@@ -62,7 +62,7 @@ export default function ExperienceStep({ onNext, onBack }: ExperienceStepProps) 
           return (
             <div
               key={field.id}
-              className="p-4 border border-border rounded-lg bg-white space-y-4"
+              className="p-4 border border-gray-200 rounded-lg bg-white space-y-4"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-900">
@@ -71,7 +71,7 @@ export default function ExperienceStep({ onNext, onBack }: ExperienceStepProps) 
                 {fields.length > 1 && (
                   <button
                     type="button"
-                    className="btn-danger text-xs px-2 py-1"
+                    className="bg-red-100 text-red-600 hover:bg-red-200 text-xs px-2 py-1"
                     onClick={() => remove(index)}
                     aria-label={`Remove job ${index + 1}`}
                   >
@@ -176,7 +176,7 @@ export default function ExperienceStep({ onNext, onBack }: ExperienceStepProps) 
 
       <button
         type="button"
-        className="btn-secondary w-full"
+        className="bg-gray-200 text-gray-800 hover:bg-gray-300 w-full"
         onClick={addJob}
       >
         + Add Another Job
@@ -189,12 +189,12 @@ export default function ExperienceStep({ onNext, onBack }: ExperienceStepProps) 
       )}
 
       <div className="flex justify-between pt-4">
-        <button type="button" className="btn-secondary" onClick={onBack}>
+        <button type="button" className="bg-gray-200 text-gray-800 hover:bg-gray-300" onClick={onBack}>
           Back
         </button>
         <button
           type="button"
-          className="btn-primary"
+          className="bg-indigo-600 text-white hover:bg-indigo-700"
           onClick={handleNext}
           disabled={isValidating}
           aria-busy={isValidating}

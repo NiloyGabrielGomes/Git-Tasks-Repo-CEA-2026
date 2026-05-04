@@ -27,9 +27,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
                 <span
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium border-2 ${
                     isActive
-                      ? 'border-primary bg-primary text-white'
+                      ? 'border-indigo-600 bg-indigo-600 text-white'
                       : isCompleted
-                      ? 'border-success bg-success text-white'
+                      ? 'border-green-600 bg-green-600 text-white'
                       : 'border-gray-300 bg-white text-gray-500'
                   }`}
                   aria-current={isActive ? 'step' : undefined}
@@ -39,9 +39,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
                 <span
                   className={`mt-2 text-xs font-medium ${
                     isActive
-                      ? 'text-primary'
+                      ? 'text-indigo-600'
                       : isCompleted
-                      ? 'text-success'
+                      ? 'text-green-600'
                       : 'text-gray-500'
                   }`}
                 >
@@ -51,7 +51,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               {index < steps.length - 1 && (
                 <div
                   className={`flex-1 h-0.5 mx-2 ${
-                    isCompleted ? 'bg-success' : 'bg-gray-200'
+                    isCompleted ? 'bg-green-600' : 'bg-gray-200'
                   }`}
                   aria-hidden="true"
                 />
@@ -107,13 +107,13 @@ function App() {
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
             Job Application
           </h1>
-          <p className="text-center text-muted mb-8">
+          <p className="text-center text-gray-500 mb-8">
             Complete the form below to apply for the position.
           </p>
 
           <StepIndicator currentStep={step} />
 
-          <div className="bg-white border border-border rounded-xl p-6 md:p-8 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8 shadow-sm">
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
                 {step === 1 && (

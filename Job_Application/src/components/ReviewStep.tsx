@@ -17,26 +17,26 @@ export default function ReviewStep({ onBack }: ReviewStepProps) {
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-gray-900">Review & Submit</h2>
 
-      <div className="bg-white border border-border rounded-lg p-6 space-y-6">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
         <section>
           <h3 className="text-lg font-medium text-gray-900 mb-3">
             Personal Information
           </h3>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 First Name
               </dt>
               <dd className="text-sm text-gray-900">{data.firstName}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Last Name
               </dt>
               <dd className="text-sm text-gray-900">{data.lastName}</dd>
             </div>
             <div className="md:col-span-2">
-              <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Email
               </dt>
               <dd className="text-sm text-gray-900">{data.email}</dd>
@@ -54,7 +54,7 @@ export default function ReviewStep({ onBack }: ReviewStepProps) {
             {data.jobs.map((job, index) => (
               <div
                 key={index}
-                className="p-4 bg-gray-50 rounded-md border border-border"
+                className="p-4 bg-gray-50 rounded-md border border-gray-200"
               >
                 <p className="text-sm font-medium text-gray-900">
                   {job.role} at {job.company}
@@ -71,7 +71,7 @@ export default function ReviewStep({ onBack }: ReviewStepProps) {
       <div className="flex justify-between pt-4">
         <button
           type="button"
-          className="btn-secondary"
+          className="bg-gray-200 text-gray-800 hover:bg-gray-300"
           onClick={onBack}
           disabled={isSubmitting}
         >
@@ -79,7 +79,7 @@ export default function ReviewStep({ onBack }: ReviewStepProps) {
         </button>
         <button
           type="submit"
-          className="btn-primary"
+          className="bg-indigo-600 text-white hover:bg-indigo-700"
           disabled={isSubmitting}
           aria-busy={isSubmitting}
         >

@@ -4,14 +4,17 @@ import { useMemo } from 'react';
 
 export function usePokemonListRQ(searchQuery: string) {
   const { data: allPokemon, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['pokemon-list', searchQuery],
-    queryFn: ({ signal }) => fetchPokemonList(signal, searchQuery),
+    queryKey: ['pokemon-list'],
+    queryFn: ({ signal }) => fetchPokemonList(signal),
   });
 
   const filtered = useMemo(() => {
     if (!allPokemon) return [];
-    return allPokemon;
-  }, [allPokemon]);
+    const query = searchQuery.toLowerCase().trim();
+    return query
+      ? allPokemon.filter(p => p.name.toLowerCase().includes(query))
+      : allPokemon;
+  }, [searchQuery, allPokemon]);
 
   const status = isLoading
     ? 'loading' as const

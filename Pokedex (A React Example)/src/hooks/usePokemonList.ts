@@ -10,7 +10,6 @@ type FetchState =
 
 export function usePokemonList(searchQuery: string): PokemonListResult {
   const [fetchState, setFetchState] = useState<FetchState>({ status: 'loading' });
-
   const loadPokemon = useCallback((signal: AbortSignal) => {
     fetchPokemonList(signal)
       .then(data => {

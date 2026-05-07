@@ -12,7 +12,7 @@ export function usePokemonList(searchQuery: string): PokemonListResult {
   const [fetchState, setFetchState] = useState<FetchState>({ status: 'loading' });
 
   const loadPokemon = useCallback((signal: AbortSignal) => {
-    fetchPokemonList(signal)
+    fetchPokemonList(signal, searchQuery)
       .then(data => {
         setFetchState({ status: 'success', data });
       })
@@ -20,7 +20,7 @@ export function usePokemonList(searchQuery: string): PokemonListResult {
         if (err.name === 'AbortError') return;
         setFetchState({ status: 'error', error: err.message });
       });
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -37,11 +37,8 @@ export function usePokemonList(searchQuery: string): PokemonListResult {
 
   const filtered = useMemo(() => {
     if (fetchState.status !== 'success') return [];
-    const query = searchQuery.toLowerCase().trim();
-    return query
-      ? fetchState.data.filter(p => p.name.toLowerCase().includes(query))
-      : fetchState.data;
-  }, [fetchState, searchQuery]);
+    return fetchState.data;
+  }, [fetchState]);
 
   const status: PokemonListResult['status'] =
     fetchState.status === 'loading' ? 'loading'

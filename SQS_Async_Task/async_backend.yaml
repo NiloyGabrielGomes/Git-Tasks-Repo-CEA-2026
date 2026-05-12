@@ -1,0 +1,289 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SQS Message Processor - Good msgs to DynamoDB, Bad msgs to Provided Email (Zero Compute)
+Parameters:
+  AdminEmail:
+    Type: String
+    Description: Email address to receive bad-message alerts
+    AllowedPattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+    ConstraintDescription: Must be a valid email address
+Globals:
+  Function:
+    Tags:
+      AppName: SqsDdbProcessor
+Resources:
+  # DynamoDB Table for good messages
+  MessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-messages
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # SNS Topic for bad-message alerts + DLQ notifications
+  AdminSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-admin-alerts
+      DisplayName: SQS Processor Alerts
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  AdminEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref AdminSNSTopic
+      Endpoint: !Ref AdminEmail
+  # SQS Dead Letter Queue
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-dlq
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # SQS Primary Queue
+  PrimaryQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-primary
+      VisibilityTimeout: 30
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # CloudWatch Alarm on DLQ depth
+  DLQDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}-dlq-depth
+      AlarmDescription: Triggers when messages appear in the DLQ
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeadLetterQueue.QueueName
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref AdminSNSTopic
+      OKActions:
+        - !Ref AdminSNSTopic
+  # Step Functions State Machine
+  ProcessingStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub ${AWS::StackName}-processor
+      StateMachineType: EXPRESS
+      DefinitionString: !Sub |
+        {
+          "Comment": "Process SQS batch - good JSON to DDB, bad JSON to SNS",
+          "StartAt": "ProcessBatch",
+          "States": {
+            "ProcessBatch": {
+              "Type": "Map",
+              "ItemsPath": "$",
+              "MaxConcurrency": 40,
+              "ItemProcessor": {
+                "ProcessorConfig": { "Mode": "INLINE" },
+                "StartAt": "Transform",
+                "States": {
+                  "Transform": {
+                    "Type": "Pass",
+                    "Parameters": {
+                      "messageId.$": "$.messageId",
+                      "body.$": "$.body",
+                      "parsed.$": "States.StringToJson($.body)"
+                    },
+                    "Catch": [{
+                      "ErrorEquals": ["States.Runtime"],
+                      "ResultPath": "$.errorInfo",
+                      "Next": "SendBadToAdmin"
+                    }],
+                    "Next": "Validate"
+                  },
+                  "Validate": {
+                    "Type": "Choice",
+                    "Choices": [{
+                      "Variable": "$.parsed.id",
+                      "IsPresent": true,
+                      "Next": "SaveToDynamoDB"
+                    }],
+                    "Default": "SendBadToAdmin"
+                  },
+                  "SaveToDynamoDB": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::dynamodb:putItem",
+                    "Parameters": {
+                      "TableName": "${MessagesTable}",
+                      "Item": {
+                        "MessageId":    { "S.$": "$.messageId" },
+                        "Payload":      { "S.$": "$.body" },
+                        "ProcessedAt":  { "S.$": "$$.State.EnteredTime" }
+                      }
+                    },
+                    "Retry": [{
+                      "ErrorEquals": ["States.ALL"],
+                      "MaxAttempts": 2,
+                      "BackoffRate": 2
+                    }],
+                    "Catch": [{
+                      "ErrorEquals": ["States.ALL"],
+                      "ResultPath": "$.errorInfo",
+                      "Next": "SendBadToAdmin"
+                    }],
+                    "End": true
+                  },
+                  "SendBadToAdmin": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::sns:publish",
+                    "Parameters": {
+                      "TopicArn": "${AdminSNSTopic}",
+                      "Subject": "Bad Message Received",
+                      "Message.$": "States.Format('MessageId: {}\nRaw Body:\n{}', $.messageId, $.body)"
+                    },
+                    "End": true
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # IAM Role for EventBridge Pipe
+  PipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-pipe-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pipes.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: PipePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt PrimaryQueue.Arn
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                  - states:StartSyncExecution
+                Resource: !Ref ProcessingStateMachine
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # IAM Role for Step Functions
+  StepFunctionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-sfn-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DDBAndSNSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource: !GetAtt MessagesTable.Arn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref AdminSNSTopic
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource: '*'
+      Tags:
+        - Key: AppName
+          Value: SqsDdbProcessor
+  # EventBridge Pipe: SQS -> Step Functions
+  ProcessingPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: !Sub ${AWS::StackName}-pipe
+      RoleArn: !GetAtt PipeRole.Arn
+      Source: !GetAtt PrimaryQueue.Arn
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 5
+          MaximumBatchingWindowInSeconds: 5
+      Target: !Ref ProcessingStateMachine
+      TargetParameters:
+        StepFunctionsStateMachineParameters:
+          InvocationType: EXPRESS
+      Tags:
+        AppName: SqsDdbProcessor
+  # AWS Budget for cost tracking (reports total cost for tagged resources)
+  CostBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub ${AWS::StackName}-monthly-budget
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: 100
+          Unit: USD
+        CostFilters:
+          TagKeyValue:
+            - user:AppName$SqsDdbProcessor
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+          Subscribers:
+            - Address: !Ref AdminEmail
+              SubscriptionType: EMAIL
+Outputs:
+  PrimaryQueueURL:
+    Description: URL of the primary SQS queue (send messages here)
+    Value: !Ref PrimaryQueue
+  DLQURL:
+    Description: URL of the dead letter queue
+    Value: !Ref DeadLetterQueue
+  DynamoDBTable:
+    Description: DynamoDB table where valid messages are stored
+    Value: !Ref MessagesTable
+  StepFunctionsARN:
+    Description: ARN of the Step Functions state machine
+    Value: !Ref ProcessingStateMachine

@@ -3,20 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 function DemoApp() {
-  const { isLoggedIn, token, login, logout } = useAuth();
+  const { isLoggedIn, token, login, logout, isLoading } = useAuth();
   const navigate = useNavigate(); // useNavigate for programmatic navigation
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('admin');
+  const [password, setPassword] = useState('admin');
   const [loginError, setLoginError] = useState('');
+  const [isLogginIn, setIsLogginIn] = useState(false);
 
-  const handleLogin = () => {
-    const success = login(email, password);
-    if (!success) {
-      setLoginError('Please enter email and password');
-    } else {
-      setLoginError('');
-      // Programmatic navigation after login — same as useNavigate('/dashboard')
-      navigate('/demo');
+  const handleLogin = async () => {
+    setIsLogginIn(true);
+    setLoginError('');
+    try {
+      await login(email, password);
+      navigate('/admin'); // Redirect to admin page after successful login
+    } catch (err) {
+      setLoginError(err.message || 'Login failed');
+    } finally {
+      setIsLogginIn(false);
     }
   };
 
@@ -42,8 +45,8 @@ function DemoApp() {
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
             />
-            <button onClick={handleLogin} style={styles.button}>
-              Login
+            <button onClick={handleLogin} style={styles.button} disabled={isLogginIn}>
+              {isLogginIn ? 'Logging in...' : 'Login'}
             </button>
             {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
           </div>

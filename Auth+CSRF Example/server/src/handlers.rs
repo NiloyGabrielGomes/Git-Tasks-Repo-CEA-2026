@@ -75,7 +75,7 @@ pub async fn get_me(http_req: HttpRequest) -> HttpResponse {
     let token = http_req.cookie("auth_token").map(|c| c.value().to_string());
 
     match token {
-        Some(t) if verify_jwt(t) => {
+        Some(t) if verify_jwt(t.clone()) => {
             HttpResponse::Ok().json(serde_json::json!({ "isLoggedIn": true }))
         }
         _ => HttpResponse::Unauthorized().json(serde_json::json!({ "isLoggedIn": false }))

@@ -8,16 +8,15 @@ mod handlers;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let cors = Cors::default()
-        .allowed_origin("http://localhost:3000")
-        .allowed_methods(vec!["GET", "POST", "OPTIONS"])
-        .allowed_headers(vec!["Content-Type", "x-csrf-token"])
-        .supports_credentials()
-        .finish();
-
-    HttpServer::new(move || {
+    HttpServer::new(|| {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:3000")
+            .allowed_methods(vec!["GET", "POST", "OPTIONS"])
+            .allowed_headers(vec!["Content-Type", "x-csrf-token"])
+            .supports_credentials();
+        
         App::new()
-            .wrap(cors.clone())
+            .wrap(cors)
             .route("/api/get_token", web::get().to(handlers::get_token))
             .route("/api/login", web::post().to(handlers::login))
             .route("/api/logout", web::post().to(handlers::logout))

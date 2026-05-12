@@ -6,7 +6,7 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Deserialize)]
 pub struct Claims {
     pub email: String,
     pub exp: usize,

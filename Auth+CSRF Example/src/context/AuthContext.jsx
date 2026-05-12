@@ -44,24 +44,62 @@ export function AuthProvider({ children }) {
   }
 
   // Fake login function (updated backend)
-  const login = (email, password) => {
-    // Simulate API call - accept any non-empty credentials
-    if (email && password) {
+  const login = async (email, password) => {
+    try {
+      // Ensure we have a CSRF token
+      const token = csrfToken || await fetchCsrfToken();
+      if (!token) {
+        throw new Error('Failed to get CSRF token');
+      }
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': token,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
       setIsLoggedIn(true);
-      setToken('fake-jwt-token-' + Date.now());
+      setToken('jwt-token-in-cookie');
       return true;
+    } catch (err) {
+      console.error('Login error:', err);
+      throw err;
     }
-    return false;
   };
 
-  const logout = () => {
-    setIsLoggedIn(false);
-    setToken(null);
+  const logout = async () => {
+    try {
+      const token = csrfToken || await fetchCsrfToken();
+      
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': token,
+        },
+        credentials: 'include',
+      });
+      setIsLoggedIn(false);
+      setToken(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
+  useEffect(() => {
+    checkAuth();
+  }, []);
+  
   const value = {
     isLoggedIn,
     token,
+    isLoading,
     login,
     logout,
   };

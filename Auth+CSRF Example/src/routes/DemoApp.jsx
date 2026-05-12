@@ -29,7 +29,7 @@ function DemoApp() {
       <div style={styles.card}>
         {!isLoggedIn ? (
           <div style={styles.loginBox}>
-            <h3>Login (Mock Auth)</h3>
+            <h3>Login</h3>
             <p>Enter any email/password to simulate login</p>
             <input
               type="email"

@@ -9,9 +9,9 @@ mod handlers;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let cors = Cors::default()
-        .allow_any_origin("https://localhost:3000")
-        .allow_any_methods(vec!["GET", "POST", "OPTIONS"])
-        .allow_any_headers(vec!["Content-Type", "x-csrf-token"])
+        .allowed_origin("http://localhost:3000")
+        .allowed_methods(vec!["GET", "POST", "OPTIONS"])
+        .allowed_headers(vec!["Content-Type", "x-csrf-token"])
         .supports_credentials()
         .finish();
 

@@ -6,8 +6,44 @@ export function AuthProvider({ children }) {
   // Mock auth state - stored in React state (in-memory, not persistent)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(null);
+  const [csrfToken, setCsrfToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fake login function (no backend)
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch('/api/get_token', {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      setCsrfToken(data.csrfToken);
+      return data.csrfToken;
+    }
+    catch (err) {
+      console.error('Failed to fetch CSRF token:', err);
+      return null;
+    }
+  };
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/me', {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.isLoggedIn) {
+        setIsLoggedIn(true);
+        setToken(data.token);
+      }
+    }
+    catch (err) {
+      console.error('Failed to check auth status:', err);
+    }
+    finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Fake login function (updated backend)
   const login = (email, password) => {
     // Simulate API call - accept any non-empty credentials
     if (email && password) {
